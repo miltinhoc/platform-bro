@@ -10,9 +10,13 @@ import org.academiadecodigo.simplegraphics.keyboard.KeyboardHandler;
 
 public class Player implements KeyboardHandler {
 
+    private static final int MAX_JUMP = 200;
+
     private Rectangle rectangle;
     private Direction direction;
+    private boolean moving;
     private boolean jumping;
+    private int currentJump;
 
     public void init() {
         rectangle = new Rectangle(110, 510, 40, 100);
@@ -36,11 +40,21 @@ public class Player implements KeyboardHandler {
     }
 
     public void move() {
-        if (direction == null || movingOut(direction.getdX())) {
+        if (!moving && !jumping && currentJump == 0) {
             return;
         }
 
-        rectangle.translate(direction.getdX(), 0);
+        if (currentJump == MAX_JUMP) {
+            jumping = false;
+        }
+
+        int dX = moving && !movingOut(direction.getdX()) ? direction.getdX() : 0;
+        int dY = (jumping & currentJump < MAX_JUMP ? -1 : (!jumping && currentJump == 0 ? 0 : 1));
+
+        currentJump -= dY;
+
+        rectangle.translate(dX, dY);
+
     }
 
     @Override
@@ -48,12 +62,14 @@ public class Player implements KeyboardHandler {
         switch (keyboardEvent.getKey()) {
             case KeyboardEvent.KEY_LEFT:
                 direction = Direction.LEFT;
+                moving = true;
                 break;
             case KeyboardEvent.KEY_RIGHT:
                 direction = Direction.RIGHT;
+                moving = true;
                 break;
             case KeyboardEvent.KEY_UP:
-                jumping = true;
+                jumping = currentJump == 0 || jumping;
         }
     }
 
@@ -63,6 +79,7 @@ public class Player implements KeyboardHandler {
             return;
         }
         direction = null;
+        moving = false;
     }
 
     private boolean movingOut(int dX) {
