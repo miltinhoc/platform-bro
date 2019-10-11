@@ -12,6 +12,7 @@ public class Player implements KeyboardHandler {
 
     private Rectangle rectangle;
     private Direction direction;
+    private boolean jumping;
 
     public void init() {
         rectangle = new Rectangle(110, 510, 40, 100);
@@ -35,7 +36,7 @@ public class Player implements KeyboardHandler {
     }
 
     public void move() {
-        if (direction == null) {
+        if (direction == null || movingOut(direction.getdX())) {
             return;
         }
 
@@ -51,17 +52,27 @@ public class Player implements KeyboardHandler {
             case KeyboardEvent.KEY_RIGHT:
                 direction = Direction.RIGHT;
                 break;
+            case KeyboardEvent.KEY_UP:
+                jumping = true;
         }
     }
 
     @Override
     public void keyReleased(KeyboardEvent keyboardEvent) {
+        if (keyboardEvent.getKey() == KeyboardEvent.KEY_UP) {
+            return;
+        }
         direction = null;
+    }
+
+    private boolean movingOut(int dX) {
+        return rectangle.getX() + dX < 10 || rectangle.getX() + rectangle.getWidth() + dX > 1290;
     }
 
     private enum Direction {
         LEFT(-1, KeyboardEvent.KEY_LEFT),
-        RIGHT(1, KeyboardEvent.KEY_RIGHT);
+        RIGHT(1, KeyboardEvent.KEY_RIGHT),
+        UP(1, KeyboardEvent.KEY_UP);
 
         private int dX;
         private int key;
