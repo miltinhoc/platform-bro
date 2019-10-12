@@ -21,7 +21,12 @@ public class DropItem implements Droppable {
 
     @Override
     public void reset() {
-        rectangle.translate(0, 0 - (GAME_HEIGHT + PADDING) - rectangle.getHeight() - 1);
+
+        int currentY = rectangle.getY();
+        int nextY = 0 - DropItemFactory.ITEM_SIZE;
+
+//        rectangle.translate(0, 0 - (GAME_HEIGHT + PADDING) - rectangle.getHeight() - 1);
+        rectangle.translate(0, nextY - currentY);
     }
 
     @Override

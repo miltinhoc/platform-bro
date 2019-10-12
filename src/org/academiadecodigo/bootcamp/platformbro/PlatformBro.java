@@ -4,16 +4,21 @@ import org.academiadecodigo.bootcamp.platformbro.objects.DropItemFactory;
 import org.academiadecodigo.bootcamp.platformbro.objects.Droppable;
 import org.academiadecodigo.simplegraphics.graphics.Color;
 import org.academiadecodigo.simplegraphics.graphics.Rectangle;
+import org.academiadecodigo.simplegraphics.keyboard.Keyboard;
+import org.academiadecodigo.simplegraphics.keyboard.KeyboardEvent;
+import org.academiadecodigo.simplegraphics.keyboard.KeyboardEventType;
+import org.academiadecodigo.simplegraphics.keyboard.KeyboardHandler;
 
 import static org.academiadecodigo.bootcamp.platformbro.Configuration.*;
 
-public class PlatformBro {
+public class PlatformBro implements KeyboardHandler {
 
     private Player player;
     private Rectangle floor;
     private Rectangle[] platforms;
     private Droppable[] droppables;
     private int droppablesStep;
+    private boolean gameOver;
 
     public PlatformBro(Player player) {
         this.player = player;
@@ -26,14 +31,14 @@ public class PlatformBro {
 
         platforms = initPlatforms();
         droppables = DropItemFactory.getDropItems(20);
-        droppables[(int)(Math.random() * 20)].drop();
+        droppables[(int) (Math.random() * 20)].drop();
 
         player.setCollisionDetector(new CollisionDetector(platforms));
         player.init();
     }
 
     public void start() {
-        while (true) {
+        while (!gameOver) {
             player.move();
             try {
                 Thread.sleep(1);
@@ -41,6 +46,10 @@ public class PlatformBro {
                 e.printStackTrace();
             }
             moveDroppables();
+            if (player.hasCollided(droppables)) {
+                System.out.println("GAME OVER");
+                gameOver = true;
+            }
         }
     }
 
@@ -55,7 +64,7 @@ public class PlatformBro {
                 continue;
             }
 
-            if (droppable.getTop() > PADDING + GAME_HEIGHT) {
+            if (droppable.getTop() > GROUND_Y) {
                 droppable.reset();
                 continue;
             }
@@ -96,9 +105,89 @@ public class PlatformBro {
         return platforms;
     }
 
+    @Override
+    public void keyPressed(KeyboardEvent keyboardEvent) {
+        switch (keyboardEvent.getKey()) {
+            case KeyboardEvent.KEY_LEFT:
+                player.setDirection(Player.Direction.LEFT);
+                player.setMoving(true);
+                break;
+            case KeyboardEvent.KEY_RIGHT:
+                player.setDirection(Player.Direction.RIGHT);
+                player.setMoving(true);
+                break;
+            case KeyboardEvent.KEY_UP:
+                if (!player.isFalling()) {
+                    player.setJumping(true);
+                }
+                break;
+            case KeyboardEvent.KEY_R:
+                if (gameOver) {
+                    gameOver = false;
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyboardEvent keyboardEvent) {
+        if (keyboardEvent.getKey() == KeyboardEvent.KEY_UP) {
+            return;
+        }
+        player.setDirection(null);
+        player.setMoving(false);
+    }
+
     public static void main(String[] args) {
         PlatformBro platformBro = new PlatformBro(new Player());
         platformBro.init();
-        platformBro.start();
+
+        initKeyboard(platformBro);
+
+        while (true) {
+            platformBro.start();
+
+            while (platformBro.gameOver) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            platformBro.reset();
+        }
+    }
+
+    private void reset() {
+        for (Droppable droppable : droppables) {
+            if (droppable.getBottom() > 0) {
+                droppable.reset();
+            }
+        }
+    }
+
+    private static void initKeyboard(KeyboardHandler handler) {
+        Keyboard keyboard = new Keyboard(handler);
+
+        for (Player.Direction direction : Player.Direction.values()) {
+            KeyboardEvent pressed = new KeyboardEvent();
+            pressed.setKey(direction.getKey());
+            pressed.setKeyboardEventType(KeyboardEventType.KEY_PRESSED);
+
+            KeyboardEvent released = new KeyboardEvent();
+            released.setKey(direction.getKey());
+            released.setKeyboardEventType(KeyboardEventType.KEY_RELEASED);
+
+            keyboard.addEventListener(released);
+            keyboard.addEventListener(pressed);
+        }
+
+        KeyboardEvent reset = new KeyboardEvent();
+        reset.setKey(KeyboardEvent.KEY_R);
+        reset.setKeyboardEventType(KeyboardEventType.KEY_PRESSED);
+
+        keyboard.addEventListener(reset);
+
     }
 }

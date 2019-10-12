@@ -1,6 +1,7 @@
 package org.academiadecodigo.bootcamp.platformbro;
 
 
+import org.academiadecodigo.bootcamp.platformbro.objects.Droppable;
 import org.academiadecodigo.simplegraphics.graphics.Color;
 import org.academiadecodigo.simplegraphics.graphics.Rectangle;
 import org.academiadecodigo.simplegraphics.keyboard.Keyboard;
@@ -25,8 +26,6 @@ public class Player implements KeyboardHandler {
         rectangle = new Rectangle(X, Y, WIDTH, HEIGHT);
         rectangle.setColor(Color.RED);
         rectangle.fill();
-
-        setupKeyboard();
     }
 
     public void move() {
@@ -52,7 +51,10 @@ public class Player implements KeyboardHandler {
         }
 
         rectangle.translate(dX, dY);
+    }
 
+    public boolean hasCollided(Droppable[] droppables) {
+        return collisionDetector.hasCollide(droppables, rectangle);
     }
 
     @Override
@@ -87,7 +89,7 @@ public class Player implements KeyboardHandler {
     }
 
     private boolean willCollideSideways() {
-        if (collisionDetector == null) {
+        if (collisionDetector == null || direction == null) {
             return false;
         }
 
@@ -106,29 +108,44 @@ public class Player implements KeyboardHandler {
         return rectangle.getY() + rectangle.getHeight() < GROUND_Y;
     }
 
-    private void setupKeyboard() {
-        Keyboard keyboard = new Keyboard(this);
+//    private void setupKeyboard() {
+//        Keyboard keyboard = new Keyboard(this);
+//
+//        for (Direction direction : Direction.values()) {
+//            KeyboardEvent pressed = new KeyboardEvent();
+//            pressed.setKey(direction.getKey());
+//            pressed.setKeyboardEventType(KeyboardEventType.KEY_PRESSED);
+//
+//            KeyboardEvent released = new KeyboardEvent();
+//            released.setKey(direction.getKey());
+//            released.setKeyboardEventType(KeyboardEventType.KEY_RELEASED);
+//
+//            keyboard.addEventListener(released);
+//            keyboard.addEventListener(pressed);
+//        }
+//    }
 
-        for (Direction direction : Direction.values()) {
-            KeyboardEvent pressed = new KeyboardEvent();
-            pressed.setKey(direction.getKey());
-            pressed.setKeyboardEventType(KeyboardEventType.KEY_PRESSED);
-
-            KeyboardEvent released = new KeyboardEvent();
-            released.setKey(direction.getKey());
-            released.setKeyboardEventType(KeyboardEventType.KEY_RELEASED);
-
-            keyboard.addEventListener(released);
-            keyboard.addEventListener(pressed);
-        }
+    public boolean isFalling() {
+        return falling;
     }
-
 
     public void setCollisionDetector(CollisionDetector collisionDetector) {
         this.collisionDetector = collisionDetector;
     }
 
-    private enum Direction {
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public void setMoving(boolean moving) {
+        this.moving = moving;
+    }
+
+    public void setJumping(boolean jumping) {
+        this.jumping = jumping;
+    }
+
+    public enum Direction {
         LEFT(-1, KeyboardEvent.KEY_LEFT),
         RIGHT(1, KeyboardEvent.KEY_RIGHT),
         UP(-1, KeyboardEvent.KEY_UP);

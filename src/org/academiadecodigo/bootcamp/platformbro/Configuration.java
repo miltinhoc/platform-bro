@@ -3,7 +3,7 @@ package org.academiadecodigo.bootcamp.platformbro;
 public final class Configuration {
 
     public static final int GAME_WIDTH = 1280;
-    public static final int GAME_HEIGHT = 620;
+    public static final int GAME_HEIGHT = 720;
     public static final int PADDING = 10;
     public static final int GROUND_Y = 600 + PADDING;
 
