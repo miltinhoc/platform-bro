@@ -12,6 +12,7 @@ public class Player implements KeyboardHandler {
 
     private static final int MAX_JUMP = 200;
 
+    private CollisionDetector collisionDetector;
     private Rectangle rectangle;
     private Direction direction;
     private boolean moving;
@@ -19,7 +20,7 @@ public class Player implements KeyboardHandler {
     private int currentJump;
 
     public void init() {
-        rectangle = new Rectangle(110, 510, 40, 100);
+        rectangle = new Rectangle(810, 510, 40, 100);
         rectangle.setColor(Color.RED);
         rectangle.fill();
 
@@ -48,13 +49,12 @@ public class Player implements KeyboardHandler {
             jumping = false;
         }
 
-        int dX = moving && !movingOut(direction.getdX()) ? direction.getdX() : 0;
+        int dX = moving && !movingOut(direction.getdX()) && !willCollideSideways() ? direction.getdX() : 0;
         int dY = (jumping & currentJump < MAX_JUMP ? -1 : (!jumping && currentJump == 0 ? 0 : 1));
 
         currentJump -= dY;
 
         rectangle.translate(dX, dY);
-
     }
 
     @Override
@@ -84,6 +84,33 @@ public class Player implements KeyboardHandler {
 
     private boolean movingOut(int dX) {
         return rectangle.getX() + dX < 10 || rectangle.getX() + rectangle.getWidth() + dX > 1290;
+    }
+
+    private boolean willCollideSideways() {
+        if (collisionDetector == null) {
+            return false;
+        }
+
+        return collisionDetector.willCollideSideways(rectangle, direction.getdX());
+    }
+
+    private boolean willCollideOnTop() {
+        if (collisionDetector == null) {
+            return false;
+        }
+
+        return collisionDetector.willCollideOnTop(rectangle);
+    }
+    private boolean willCollideOnBottom() {
+        if (collisionDetector == null) {
+            return false;
+        }
+
+        return collisionDetector.willCollideOnBottom(rectangle);
+    }
+
+    public void setCollisionDetector(CollisionDetector collisionDetector) {
+        this.collisionDetector = collisionDetector;
     }
 
     private enum Direction {

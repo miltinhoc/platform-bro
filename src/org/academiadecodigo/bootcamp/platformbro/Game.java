@@ -18,9 +18,11 @@ public class Game {
         floor = new Rectangle(10,610,1280,120);
         floor.fill();
 
+        platforms = initPlatforms();
+
+        player.setCollisionDetector(new CollisionDetector(platforms));
         player.init();
 
-        platforms = initPlatforms();
     }
 
     public void start() {
