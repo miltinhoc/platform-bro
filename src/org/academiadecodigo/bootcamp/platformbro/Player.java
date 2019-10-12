@@ -8,22 +8,105 @@ import org.academiadecodigo.simplegraphics.keyboard.KeyboardEvent;
 import org.academiadecodigo.simplegraphics.keyboard.KeyboardEventType;
 import org.academiadecodigo.simplegraphics.keyboard.KeyboardHandler;
 
-public class Player implements KeyboardHandler {
+import static org.academiadecodigo.bootcamp.platformbro.Configuration.*;
+import static org.academiadecodigo.bootcamp.platformbro.Configuration.Player.*;
 
-    private static final int MAX_JUMP = 200;
+public class Player implements KeyboardHandler {
 
     private CollisionDetector collisionDetector;
     private Rectangle rectangle;
     private Direction direction;
     private boolean moving;
     private boolean jumping;
+    private boolean falling;
     private int currentJump;
 
     public void init() {
-        rectangle = new Rectangle(810, 510, 40, 100);
+        rectangle = new Rectangle(X, Y, WIDTH, HEIGHT);
         rectangle.setColor(Color.RED);
         rectangle.fill();
 
+        setupKeyboard();
+    }
+
+    public void move() {
+        falling = !willCollideVertically(1) && isAboveGround();
+
+        if (!falling && !moving && !jumping) {
+            return;
+        }
+
+        int dX = moving && !movingOut(direction.getdX()) && !willCollideSideways() ? direction.getdX() : 0;
+        int dY = 0;
+
+        if (jumping) {
+            if (currentJump < MAX_JUMP && !willCollideVertically(-1)) {
+                dY = -1;
+                currentJump++;
+            } else {
+                currentJump = 0;
+                jumping = false;
+            }
+        } else if (falling) {
+            dY = 1;
+        }
+
+        rectangle.translate(dX, dY);
+
+    }
+
+    @Override
+    public void keyPressed(KeyboardEvent keyboardEvent) {
+        switch (keyboardEvent.getKey()) {
+            case KeyboardEvent.KEY_LEFT:
+                direction = Direction.LEFT;
+                moving = true;
+                break;
+            case KeyboardEvent.KEY_RIGHT:
+                direction = Direction.RIGHT;
+                moving = true;
+                break;
+            case KeyboardEvent.KEY_UP:
+                if (!falling) {
+                    jumping = true;
+                }
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyboardEvent keyboardEvent) {
+        if (keyboardEvent.getKey() == KeyboardEvent.KEY_UP) {
+            return;
+        }
+        direction = null;
+        moving = false;
+    }
+
+    private boolean movingOut(int dX) {
+        return rectangle.getX() + dX < PADDING || rectangle.getX() + rectangle.getWidth() + dX > GAME_WIDTH + PADDING;
+    }
+
+    private boolean willCollideSideways() {
+        if (collisionDetector == null) {
+            return false;
+        }
+
+        return collisionDetector.willCollide(rectangle, direction.getdX(), 0);
+    }
+
+    private boolean willCollideVertically(int dY) {
+        if (collisionDetector == null) {
+            return false;
+        }
+
+        return collisionDetector.willCollide(rectangle, 0, dY);
+    }
+
+    private boolean isAboveGround() {
+        return rectangle.getY() + rectangle.getHeight() < GROUND_Y;
+    }
+
+    private void setupKeyboard() {
         Keyboard keyboard = new Keyboard(this);
 
         for (Direction direction : Direction.values()) {
@@ -40,74 +123,6 @@ public class Player implements KeyboardHandler {
         }
     }
 
-    public void move() {
-        if (!moving && !jumping && currentJump == 0) {
-            return;
-        }
-
-        if (currentJump == MAX_JUMP) {
-            jumping = false;
-        }
-
-        int dX = moving && !movingOut(direction.getdX()) && !willCollideSideways() ? direction.getdX() : 0;
-        int dY = (jumping & currentJump < MAX_JUMP ? -1 : (!jumping && currentJump == 0 ? 0 : 1));
-
-        currentJump -= dY;
-
-        rectangle.translate(dX, dY);
-    }
-
-    @Override
-    public void keyPressed(KeyboardEvent keyboardEvent) {
-        switch (keyboardEvent.getKey()) {
-            case KeyboardEvent.KEY_LEFT:
-                direction = Direction.LEFT;
-                moving = true;
-                break;
-            case KeyboardEvent.KEY_RIGHT:
-                direction = Direction.RIGHT;
-                moving = true;
-                break;
-            case KeyboardEvent.KEY_UP:
-                jumping = currentJump == 0 || jumping;
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyboardEvent keyboardEvent) {
-        if (keyboardEvent.getKey() == KeyboardEvent.KEY_UP) {
-            return;
-        }
-        direction = null;
-        moving = false;
-    }
-
-    private boolean movingOut(int dX) {
-        return rectangle.getX() + dX < 10 || rectangle.getX() + rectangle.getWidth() + dX > 1290;
-    }
-
-    private boolean willCollideSideways() {
-        if (collisionDetector == null) {
-            return false;
-        }
-
-        return collisionDetector.willCollideSideways(rectangle, direction.getdX());
-    }
-
-    private boolean willCollideOnTop() {
-        if (collisionDetector == null) {
-            return false;
-        }
-
-        return collisionDetector.willCollideOnTop(rectangle);
-    }
-    private boolean willCollideOnBottom() {
-        if (collisionDetector == null) {
-            return false;
-        }
-
-        return collisionDetector.willCollideOnBottom(rectangle);
-    }
 
     public void setCollisionDetector(CollisionDetector collisionDetector) {
         this.collisionDetector = collisionDetector;
@@ -116,7 +131,7 @@ public class Player implements KeyboardHandler {
     private enum Direction {
         LEFT(-1, KeyboardEvent.KEY_LEFT),
         RIGHT(1, KeyboardEvent.KEY_RIGHT),
-        UP(1, KeyboardEvent.KEY_UP);
+        UP(-1, KeyboardEvent.KEY_UP);
 
         private int dX;
         private int key;

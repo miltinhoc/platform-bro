@@ -3,6 +3,8 @@ package org.academiadecodigo.bootcamp.platformbro;
 import org.academiadecodigo.simplegraphics.graphics.Color;
 import org.academiadecodigo.simplegraphics.graphics.Rectangle;
 
+import static org.academiadecodigo.bootcamp.platformbro.Configuration.*;
+
 public class Game {
 
     private Player player;
@@ -14,8 +16,8 @@ public class Game {
     }
 
     public void init() {
-        new Rectangle(10,10,1280,720).draw();
-        floor = new Rectangle(10,610,1280,120);
+        new Rectangle(PADDING,PADDING,GAME_WIDTH,GAME_HEIGHT).draw();
+        floor = new Rectangle(PADDING,GROUND_Y, GAME_WIDTH,GAME_HEIGHT - GROUND_Y + PADDING);
         floor.fill();
 
         platforms = initPlatforms();
@@ -30,7 +32,7 @@ public class Game {
             player.move();
 
             try {
-                Thread.sleep(2);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
